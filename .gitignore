@@ -1,0 +1,31 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Large data files
+output/*.npz
+output/*.pkl
+
+# Logs
+*.log
+
+# Local configuration
+.DS_Store
+.idea/
+.vscode/ 
