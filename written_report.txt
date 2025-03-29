@@ -1,0 +1,137 @@
+# CISI Information Retrieval System: Performance Evaluation Report
+
+## 1. Indexing Process
+
+### 1.1 Search Engine Overview
+- Implementation of a custom search engine for the CISI document collection
+- Based on Python with NLTK, scikit-learn, and numpy libraries
+- Processing and indexing of 1,460 documents, 112 queries, and 3,114 relevance judgments
+
+### 1.2 Indexing Steps
+1. Document parsing from CISI.ALL file
+   - Extraction of document ID, title, author, and content
+   - Creation of document metadata
+
+2. Text preprocessing
+   - Tokenization using NLTK's word_tokenize
+   - Stopword removal using NLTK's English stopwords list
+   - Stemming using Porter stemmer
+   - Conversion to lowercase
+
+3. TF-IDF vectorization
+   - Creation of document-term matrix using scikit-learn's TfidfVectorizer
+   - Building document vectors based on the full text (title, author, and content)
+   - Storage of vectors in sparse matrix format for efficiency
+
+4. Storage of processed data
+   - Vectorizer model saved as vectorizer.pkl
+   - Document vectors saved as doc_vectors.npz
+   - Document IDs mapping saved as doc_ids.json
+   - Processed documents saved as documents.json
+   - Processed queries saved as queries.json
+   - Relevance judgments saved as relevance.json
+
+## 2. Retrieval Process
+
+### 2.1 Ranking Algorithms
+Three ranking algorithms were implemented and compared:
+
+#### 2.1.1 TF-IDF with Cosine Similarity
+- Classic vector space model approach
+- Represents documents and queries as TF-IDF vectors
+- Ranks based on cosine similarity between vectors
+- Formula: similarity(q, d) = (q · d) / (||q|| * ||d||)
+- Advantages: Simple to implement, computationally efficient
+- Disadvantages: No document length normalization, no term saturation
+
+#### 2.1.2 Cosine Similarity (with normalized vectors)
+- Extension of TF-IDF approach
+- Uses vector normalization to account for document length
+- Better handling of the angular separation between document and query vectors
+- Formula: Same as TF-IDF but with normalized vectors
+- Advantages: Takes document length into account, more balanced scoring
+- Disadvantages: Still lacks term saturation handling
+
+#### 2.1.3 BM25 (Okapi BM25)
+- Probabilistic ranking function
+- Extends TF-IDF with document length normalization and term saturation
+- Parameters: k1 (term frequency saturation) and b (document length normalization)
+- Formula: score(q, d) = ∑ IDF(t) * (f(t, d) * (k1 + 1)) / (f(t, d) + k1 * (1 - b + b * |d|/avgdl))
+- Advantages: Sophisticated handling of term frequency and document length
+- Disadvantages: More complex, requires parameter tuning
+
+### 2.2 Retrieval Method
+1. Query preprocessing
+   - Same preprocessing steps as for documents
+   - Tokenization, stopword removal, stemming
+
+2. Query transformation
+   - For TF-IDF and Cosine: Transform query to TF-IDF vector
+   - For BM25: Use preprocessed query terms directly
+
+3. Similarity calculation
+   - For TF-IDF and Cosine: Calculate cosine similarity between query vector and all document vectors
+   - For BM25: Calculate BM25 score for each document
+
+4. Ranking
+   - Sort documents by similarity/score in descending order
+   - Return top-k documents
+
+## 3. Evaluation Analysis
+
+### 3.1 Evaluation Metrics
+The following metrics were used to evaluate ranking performance:
+
+- **Precision@10**: Proportion of retrieved documents that are relevant
+- **Recall@10**: Proportion of relevant documents that are retrieved
+- **nDCG@10**: Normalized Discounted Cumulative Gain, which measures ranking quality
+- **MRR**: Mean Reciprocal Rank, which measures the position of first relevant document
+- **MAP**: Mean Average Precision, which measures the area under precision-recall curve
+
+### 3.2 Results
+
+#### 3.2.1 Performance Comparison (Top 10 Documents)
+
+| Method | Precision | Recall | nDCG | MRR | MAP |
+|--------|-----------|--------|------|-----|-----|
+| TF-IDF | 0.1950 | 0.0592 | 0.2111 | 0.3667 | 0.0285 |
+| COSINE | 0.2650 | 0.0784 | 0.2599 | 0.3892 | 0.0409 |
+| BM25 | 0.3050 | 0.1510 | 0.3472 | 0.5919 | 0.0667 |
+
+### 3.3 Key Findings
+
+#### 3.3.1 BM25 Performance
+BM25 consistently outperformed the other ranking formulas across all evaluation metrics:
+- 35.9% higher precision than TF-IDF
+- 155.1% higher recall than TF-IDF
+- 61.4% higher nDCG than TF-IDF
+- 61.4% higher MRR than TF-IDF
+- 134.0% higher MAP than TF-IDF
+
+This superior performance can be attributed to:
+1. Document length normalization (addressing the bias toward longer documents)
+2. Term saturation (diminishing returns for repeated terms)
+3. Tunable parameters that can be adjusted for different collections
+
+#### 3.3.2 Cosine Similarity vs. TF-IDF
+Cosine Similarity performed better than basic TF-IDF, showing:
+- 35.9% higher precision
+- 32.4% higher recall
+- 23.1% higher nDCG
+- 6.1% higher MRR
+- 43.5% higher MAP
+
+This improvement is likely due to:
+1. Vector normalization, which accounts for document length
+2. Better handling of the angular separation between document and query vectors
+
+#### 3.3.3 TF-IDF Limitations
+TF-IDF showed the lowest performance across all metrics, which can be explained by:
+1. No document length normalization (bias toward longer documents)
+2. No term saturation adjustment (overweighting of repeated terms)
+3. Simplistic term weighting that doesn't account for term proximity or importance
+
+### 3.4 Conclusion
+The evaluation demonstrates that BM25 is the most effective ranking formula for the CISI collection, with Cosine Similarity offering a good balance between performance and simplicity. These findings align with the theoretical advantages of each method and confirm the importance of document length normalization and term saturation in information retrieval systems.
+
+For future work, parameter optimization for BM25, implementation of query expansion techniques, and exploration of ensemble ranking methods could further improve retrieval performance. 
